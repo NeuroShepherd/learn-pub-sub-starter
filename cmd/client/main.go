@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -43,8 +41,45 @@ func main() {
 	defer ch.Close()
 	fmt.Printf("Declared and bound queue: %s\n", queue.Name)
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt)
-	<-sigChan
+	gameState := gamelogic.NewGameState(username)
+
+	for {
+		words := gamelogic.GetInput()
+		if len(words) == 0 {
+			continue
+		}
+
+		switch words[0] {
+		case "spawn":
+			fmt.Println(words[1:])
+			err := gameState.CommandSpawn(
+				words, // pass the rest of the words as arguments
+			)
+			if err != nil {
+				fmt.Printf("Error spawning entity: %s\n", err)
+				continue
+			}
+		case "move":
+			_, err := gameState.CommandMove(
+				words, // pass the rest of the words as arguments
+			)
+			if err != nil {
+				fmt.Printf("Error moving units: %s\n", err)
+				continue
+			}
+		case "status":
+			gameState.CommandStatus()
+		case "help":
+			gamelogic.PrintClientHelp()
+		case "spam":
+			fmt.Println("Spamming not allowed yet!")
+		case "quit":
+			gamelogic.PrintQuit()
+			return
+		default:
+			fmt.Println("Unknown command. Type 'help' for a list of commands.")
+			continue
+		}
+	}
 
 }
