@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 
-	"os/signal"
-
+	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/routing"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -28,19 +26,45 @@ func main() {
 		return
 	}
 
-	pubsub.PublishJSON(
-		ch,
-		routing.ExchangePerilDirect,
-		routing.PauseKey,
-		routing.PlayingState{
-			IsPaused: true,
-		},
-	)
+	gamelogic.PrintServerHelp()
 
-	// wait for ctrl+c
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	<-signalChan
+	for {
+		word := gamelogic.GetInput() //returns slice of strings
 
-	fmt.Println("Shutting down...")
+		if len(word) == 0 {
+			continue
+		}
+
+		switch word[0] {
+		case "pause":
+			fmt.Println("Pausing the game...")
+			pubsub.PublishJSON(
+				ch,
+				routing.ExchangePerilDirect,
+				routing.PauseKey,
+				routing.PlayingState{
+					IsPaused: true, // false for resume
+				},
+			)
+		case "resume":
+			fmt.Println("Resuming the game...")
+			pubsub.PublishJSON(
+				ch,
+				routing.ExchangePerilDirect,
+				routing.PauseKey,
+				routing.PlayingState{
+					IsPaused: false, // true for pause
+				},
+			)
+		case "quit":
+			fmt.Println("Quitting the server...")
+			return
+		case "help":
+			gamelogic.PrintServerHelp()
+		default:
+			fmt.Printf("Unknown command: %s\n", word[0])
+			gamelogic.PrintServerHelp()
+		}
+	}
+
 }
