@@ -26,6 +26,20 @@ func main() {
 		return
 	}
 
+	queueCh, queue, err := pubsub.DeclareAndBind(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.GameLogSlug,
+		routing.GameLogSlug+"."+"*",
+		pubsub.QueueDurable,
+	)
+	if err != nil {
+		fmt.Printf("Failed to declare and bind queue: %s\n", err)
+		return
+	}
+	defer queueCh.Close()
+	fmt.Println("Declared and bound queue:", queue.Name)
+
 	gamelogic.PrintServerHelp()
 
 	for {
