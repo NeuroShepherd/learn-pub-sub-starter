@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -26,19 +27,17 @@ func main() {
 		return
 	}
 
-	queueCh, queue, err := pubsub.DeclareAndBind(
+	err = pubsub.SubscribeGob(
 		conn,
 		routing.ExchangePerilTopic,
 		routing.GameLogSlug,
 		routing.GameLogSlug+"."+"*",
 		pubsub.QueueDurable,
+		handlerLogs(),
 	)
 	if err != nil {
-		fmt.Printf("Failed to declare and bind queue: %s\n", err)
-		return
+		log.Fatalf("could not starting consuming logs: %v", err)
 	}
-	defer queueCh.Close()
-	fmt.Println("Declared and bound queue:", queue.Name)
 
 	gamelogic.PrintServerHelp()
 
