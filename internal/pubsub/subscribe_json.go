@@ -10,11 +10,6 @@ import (
 type Acktype int
 
 const (
-	SimpleQueueDurable SimpleQueueType = iota
-	SimpleQueueTransient
-)
-
-const (
 	Ack Acktype = iota
 	NackDiscard
 	NackRequeue

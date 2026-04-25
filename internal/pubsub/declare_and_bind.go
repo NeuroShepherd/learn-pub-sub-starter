@@ -28,7 +28,9 @@ func DeclareAndBind(conn *amqp.Connection, exchange, queueName, key string, queu
 		autoDelete, // delete when unused
 		exclusive,  // exclusive
 		false,      // no-wait
-		nil,        // arguments
+		amqp.Table{
+			"x-dead-letter-exchange": "peril_dlx",
+		},
 	)
 	if err != nil {
 		ch.Close()
