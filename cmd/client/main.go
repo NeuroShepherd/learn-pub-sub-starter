@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -43,13 +44,20 @@ func main() {
 	}
 	fmt.Println("Subscribed to pause messages")
 
+	// new channel
+	ch, err := conn.Channel()
+	if err != nil {
+		fmt.Printf("Failed to open a channel: %s\n", err)
+		return
+	}
+
 	err = pubsub.SubscribeJSON[gamelogic.ArmyMove](
 		conn,
 		routing.ExchangePerilTopic,
 		fmt.Sprintf("%s.%s", routing.ArmyMovesPrefix, username),
 		fmt.Sprintf("%s.%s", routing.ArmyMovesPrefix, "*"),
 		pubsub.QueueTransient,
-		handlerMove(gameState),
+		handlerMove(gameState, ch),
 	)
 	if err != nil {
 		fmt.Printf("Failed to subscribe to army moves messages: %s\n", err)
@@ -57,11 +65,16 @@ func main() {
 	}
 	fmt.Println("Subscribed to army_moves messages")
 
-	// new channel
-	ch, err := conn.Channel()
+	err = pubsub.SubscribeJSON(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.WarRecognitionsPrefix,
+		routing.WarRecognitionsPrefix+".*",
+		pubsub.QueueDurable,
+		handlerWar(gameState),
+	)
 	if err != nil {
-		fmt.Printf("Failed to open a channel: %s\n", err)
-		return
+		log.Fatalf("could not subscribe to war declarations: %v", err)
 	}
 
 	for {
