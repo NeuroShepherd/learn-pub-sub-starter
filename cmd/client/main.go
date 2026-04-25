@@ -130,7 +130,7 @@ func main() {
 			}
 			for i := 0; i < n; i++ {
 				msg := gamelogic.GetMaliciousLog()
-				err = publishGameLog(publishCh, username, msg)
+				err = publishGameLog(ch, username, msg)
 				if err != nil {
 					fmt.Printf("error publishing malicious log: %s\n", err)
 				}
